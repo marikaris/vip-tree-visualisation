@@ -4,12 +4,14 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import * as d3 from 'd3'
+
+import { select, event } from 'd3-selection'
+import { zoom, zoomIdentity } from 'd3-zoom'
 import dagreD3, { graphlib, Label } from 'dagre-d3'
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
-import * as treeBuilder from '@/utils/treeBuilder'
-import * as scaleCalculator from '@/utils/scaleCalculator'
+import { retrieveNodes, retrieveEdges } from '@/utils/treeBuilder'
+import { calculateWidthScale, calculateHeightScale } from '@/utils/scaleCalculator'
 import { TreeNodes } from '@/types/TreeNodes'
 import { DecisionTree } from '@/types/DecisionTree'
 import { TreeEdgesArray } from '@/types/TreeEdges'
@@ -35,10 +37,10 @@ export default Vue.extend({
       return JSON.parse(this.tree)
     },
     nodes (): TreeNodes {
-      return treeBuilder.retrieveNodes(this.jsonTree)
+      return retrieveNodes(this.jsonTree)
     },
     edges (): TreeEdgesArray {
-      return treeBuilder.retrieveEdges(this.jsonTree)
+      return retrieveEdges(this.jsonTree)
     }
   },
   watch: {
@@ -84,10 +86,10 @@ export default Vue.extend({
     },
     addZoom (g: TreeGraph): void {
       const inner = this.svg.append('g')
-      const zoom = d3.zoom().on('zoom', () => {
-        inner.attr('transform', d3.event.transform)
+      const d3zoom = zoom().on('zoom', () => {
+        inner.attr('transform', event.transform)
       })
-      this.svg.call(zoom)
+      this.svg.call(d3zoom)
       const render = new dagreD3.render()
       render(inner, g)
       this.addToolTips(inner)
@@ -95,21 +97,20 @@ export default Vue.extend({
       const graphWidth = g.graph().width
       if (graphWidth) {
         this.svg.call(
-          zoom.transform,
-          d3.zoomIdentity
+          d3zoom.transform,
+          zoomIdentity
             .translate(
-              scaleCalculator.calculateWidthScale(width, graphWidth, this.initialScale), 20)
+              calculateWidthScale(width, graphWidth, this.initialScale), 20)
             .scale(this.initialScale)
         )
       }
       const graphHeight = g.graph().height
       if (graphHeight) {
-        this.svg.attr('height', scaleCalculator.calculateHeightScale(graphHeight, this.initialScale))
+        this.svg.attr('height', calculateHeightScale(graphHeight, this.initialScale))
       }
     },
     setSvg (g: TreeGraph): void {
-      this.svg = d3
-        .select(this.$el)
+      this.svg = select(this.$el)
         .append('svg')
         .attr('width', document.body.clientWidth - 350)
         .attr('height', 250)
