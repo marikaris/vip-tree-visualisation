@@ -16,11 +16,11 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     '@typescript-eslint/no-var-requires': 0,
     'new-cap': 0,
-    "@typescript-eslint/no-this-alias": [
-      "error",
+    '@typescript-eslint/no-this-alias': [
+      'error',
       {
-        "allowDestructuring": true, // Allow `const { props, state } = this`; false by default
-        "allowedNames": ["self"] // Allow `const self = this`; `[]` by default
+        'allowDestructuring': true, // Allow `const { props, state } = this`; false by default
+        'allowedNames': ['self'] // Allow `const self = this`; `[]` by default
       }
     ]
   },

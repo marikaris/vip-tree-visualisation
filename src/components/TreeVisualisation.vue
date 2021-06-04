@@ -7,7 +7,8 @@ import Vue from 'vue'
 
 import { select, event } from 'd3-selection'
 import { zoom, zoomIdentity } from 'd3-zoom'
-import dagreD3, { graphlib, Label } from 'dagre-d3'
+import render from 'dagre-d3/lib/render'
+import { Graph } from 'graphlib'
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
 import { retrieveNodes, retrieveEdges } from '@/utils/treeBuilder'
@@ -58,7 +59,7 @@ export default Vue.extend({
         const nodeToStyle: StyledNode = g.node(node.id)
         nodeToStyle.style = node.id.indexOf('error') === -1 ? 'fill: #7f7' : 'fill: #f77'
       })
-      g.nodes().forEach((gNode: string | Label) => {
+      g.nodes().forEach((gNode: string | { [key: string]: any }) => {
         const node = g.node(gNode)
         node.rx = node.ry = 5
       })
@@ -90,8 +91,8 @@ export default Vue.extend({
         inner.attr('transform', event.transform)
       })
       this.svg.call(d3zoom)
-      const render = new dagreD3.render()
-      render(inner, g)
+      const renderTree = new render()
+      renderTree(inner, g)
       this.addToolTips(inner)
       const width = parseInt(this.svg.attr('width'))
       const graphWidth = g.graph().width
@@ -117,7 +118,7 @@ export default Vue.extend({
       this.addZoom(g)
     },
     render (nodes: TreeNodes, edges: TreeEdgesArray): void {
-      const g: TreeGraph = new graphlib.Graph().setGraph({})
+      const g: TreeGraph = new Graph().setGraph({})
       this.drawNodes(nodes, g)
       this.drawEdges(edges, g)
       this.setSvg(g)
