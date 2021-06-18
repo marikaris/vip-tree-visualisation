@@ -9,8 +9,6 @@ import { select, event } from 'd3-selection'
 import { zoom, zoomIdentity } from 'd3-zoom'
 import render from 'dagre-d3/lib/render'
 import { Graph } from 'graphlib'
-import tippy from 'tippy.js'
-import 'tippy.js/dist/tippy.css'
 import { retrieveNodes, retrieveEdges } from '@/utils/treeBuilder'
 import { calculateWidthScale, calculateHeightScale } from '@/utils/scaleCalculator'
 import { TreeNodes } from '@/types/TreeNodes'
@@ -69,22 +67,6 @@ export default Vue.extend({
         g.setEdge(edge.from, edge.to, { label: edge.label })
       })
     },
-    addToolTips (inner: D3GSelection): void {
-      const self = this
-      inner.selectAll('g.node')
-        .attr('title', () => 'tree')
-        .each(function (gNode) {
-          self.createToolTip(this as Element, gNode as string)
-        })
-    },
-    createToolTip (element: Element, node: string) {
-      tippy(element, {
-        content: node,
-        interactive: true,
-        allowHTML: true,
-        appendTo: document.body
-      })
-    },
     addZoom (g: TreeGraph): void {
       const inner = this.svg.append('g')
       const d3zoom = zoom().on('zoom', () => {
@@ -93,7 +75,6 @@ export default Vue.extend({
       this.svg.call(d3zoom)
       const renderTree = new render()
       renderTree(inner, g)
-      this.addToolTips(inner)
       const width = parseInt(this.svg.attr('width'))
       const graphWidth = g.graph().width
       if (graphWidth) {
