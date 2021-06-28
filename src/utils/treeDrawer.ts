@@ -31,6 +31,10 @@ const getXOffset = (svg: D3SVGSelection) => {
   return Number(svg.style('width').replace('px', '')) / 3
 }
 
+const getMiddleEdgeIndex = (edges: { x: number, y: number }[]) => {
+  return Math.floor(edges.length / 2)
+}
+
 const drawLine = (svg: D3SVGSelection, x1: number, y1: number, x2: number, y2: number) => {
   return svg.append('line')
     .style('stroke', 'black')
@@ -53,7 +57,7 @@ const drawNode = (gElement: D3SVGSelection, x: number, y: number, width: number,
     .attr('fill', '#69a3b2')
 }
 
-const addNodeLabel = (gElement: D3SVGSelection, x: number, y: number, label: string, fontSize: number) => {
+const addLabel = (gElement: D3SVGSelection, x: number, y: number, label: string, fontSize: number) => {
   gElement.append('text')
     .attr('x', x)
     .attr('y', y)
@@ -68,7 +72,7 @@ export const drawNodes = (svg: D3SVGSelection, g: TreeGraph, fontSize: number): 
     const node = g.node(v)
     const gElement = svg.append('g')
     drawNode(gElement, node.x + xOffset - node.width / 2, node.y, node.width, node.height)
-    addNodeLabel(gElement, node.x + xOffset, node.y + fontSize * 2, node.label, fontSize)
+    addLabel(gElement, node.x + xOffset, node.y + fontSize * 2, node.label, fontSize)
   })
 }
 
@@ -92,11 +96,10 @@ const defineArrowHead = (svg: D3SVGSelection) => {
     .attr('stroke', 'black')
 }
 
-export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number): void => {
+export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, font: string): void => {
   const xOffset = getXOffset(svg)
   g.edges().forEach((e: any) => {
     const points = g.edge(e).points
-
     for (const [index, value] of points.entries()) {
       if (index + 1 !== points.length) {
         const x1 = value.x + xOffset
@@ -109,6 +112,13 @@ export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number):
           defineArrowHead(svg)
           drawnLine.attr('marker-end', 'url(#arrow)')
             .attr('fill', 'none')
+        }
+        if (index === getMiddleEdgeIndex(points)) {
+          const fontSize = barHeight / 3
+          const labels = g.edge(e).label.split('\n')
+          for (const [index, label] of labels.entries()) {
+            addLabel(svg, value.x + xOffset + getTextWidth(label, fontSize, font) / 2 + 2, value.y + index * fontSize, label, fontSize)
+          }
         }
       }
     }

@@ -70,7 +70,7 @@ export default Vue.extend({
     },
     defineEdges (edges: TreeEdgesArray, g: TreeGraph): void {
       edges.forEach((edge) => {
-        g.setEdge(edge.from, edge.to)
+        g.setEdge(edge.from, edge.to, { label: edge.label })
       })
     },
     addZoom (g: TreeGraph): void {
@@ -108,13 +108,12 @@ export default Vue.extend({
       const g: TreeGraph = new graphlib.Graph()
       g.setGraph({})
       g.setDefaultEdgeLabel(function () { return {} })
-      console.log('defining nodes')
       this.defineNodes(nodes, g)
       this.defineEdges(edges, g)
       layout(g)
       this.setSvg(g)
       drawNodes(this.svg, g, this.fontSize)
-      drawEdges(this.svg, g, this.barHeight)
+      drawEdges(this.svg, g, this.barHeight, this.font)
     },
     refresh (): void {
       this.svg.remove()
