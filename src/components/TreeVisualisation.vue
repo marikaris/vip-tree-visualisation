@@ -1,5 +1,5 @@
 <template>
-  <div></div>
+  <div class="d3-tree-visualisation"></div>
 </template>
 
 <script lang="ts">
@@ -15,20 +15,12 @@ import { DecisionTree } from '@/types/DecisionTree'
 import { TreeEdgesArray } from '@/types/TreeEdges'
 import { TreeGraph } from '@/types/dagre'
 import { D3SVGSelection } from '@/types/d3'
-import { getNode, drawNodes, drawEdges } from '@/utils/treeDrawer'
+import { getNode, drawNodes, drawEdges, getBarHeightFromFontSize } from '@/utils/treeDrawer'
 
 export default Vue.extend({
   name: 'TreeVisualisation',
   props: {
-    tree: String,
-    fontSize: {
-      type: Number,
-      default: 10
-    },
-    font: {
-      type: String,
-      default: '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,Liberation Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji'
-    }
+    tree: String
   },
   mounted (): void {
     this.render(this.nodes, this.edges)
@@ -39,8 +31,14 @@ export default Vue.extend({
     }
   },
   computed: {
+    fontSize (): number {
+      return Number(this.getCss('font-size').replace('px', ''))
+    },
+    font (): string {
+      return this.getCss('font')
+    },
     barHeight (): number {
-      return 3 * this.fontSize
+      return getBarHeightFromFontSize(this.fontSize)
     },
     jsonTree (): DecisionTree {
       return JSON.parse(this.tree)
@@ -61,6 +59,10 @@ export default Vue.extend({
     }
   },
   methods: {
+    getCss (property) {
+      const element = document.getElementsByClassName('d3-tree-visualisation')[0]
+      return window.getComputedStyle(element, null).getPropertyValue(property)
+    },
     defineNodes (nodes: TreeNodes, g: TreeGraph): void {
       nodes.forEach((node) => {
         g.setNode(node.id, getNode(node.label, this.barHeight, this.fontSize, this.font))
@@ -72,7 +74,7 @@ export default Vue.extend({
       })
     },
     getZoom (svg) {
-      const d3zoom = zoom()
+      return zoom()
         .scaleExtent([0.2, 8])
         .on('zoom', (event) => {
           svg.selectAll('line')
@@ -82,7 +84,6 @@ export default Vue.extend({
           svg.selectAll('text')
             .attr('transform', event.transform)
         })
-      return d3zoom
     },
     setSvg (): void {
       this.svg = select(this.$el)
@@ -134,5 +135,9 @@ svg {
   stroke: #333;
   fill: #333;
   stroke-width: 1.5px;
+}
+
+.d3-tree-visualisation {
+  font-size: 10px;
 }
 </style>
