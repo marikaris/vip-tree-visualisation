@@ -27,12 +27,13 @@ export const getBarHeightFromFontSize = (fontSize: number): number => {
   return fontSizeToBarHeightRatio * fontSize
 }
 
-export const getFontSizeFromBarHeight = (barHeight: number): number => {
+const getFontSizeFromBarHeight = (barHeight: number): number => {
   return barHeight / fontSizeToBarHeightRatio
 }
 
-export const getNode = (label: string, barHeight: number, fontSize: number, font: string): { label: string, width: number, height: number } => {
-  const textWidth = getTextWidth(label, fontSize, font)
+export const getNode = (label: string, fontSize: number, font: string): { label: string, width: number, height: number } => {
+  const textWidth = exportFunctions.getTextWidth(label, fontSize, font)
+  const barHeight = getBarHeightFromFontSize(fontSize)
   return {
     label: label,
     width: textWidth + (textWidth / fontSizeToBarHeightRatio * 2),
@@ -151,3 +152,18 @@ export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, 
     }
   })
 }
+
+const exportFunctions = {
+  getLineThickness,
+  getBarHeightFromFontSize,
+  getFontSizeFromBarHeight,
+  getNode,
+  drawNodes,
+  drawEdges,
+  getTextWidth,
+  getMiddleEdgeIndex,
+  getEdgeLabelXPos,
+  getEdgeLabelYPos
+}
+
+export default exportFunctions

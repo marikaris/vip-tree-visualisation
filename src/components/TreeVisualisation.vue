@@ -71,13 +71,13 @@ export default Vue.extend({
     }
   },
   methods: {
-    getCss (property) {
+    getCss (property: string) {
       const element = document.getElementsByClassName('d3-tree-visualisation')[0]
       return window.getComputedStyle(element, null).getPropertyValue(property)
     },
     defineNodes (nodes: TreeNodes, g: TreeGraph): void {
       nodes.forEach((node) => {
-        g.setNode(node.id, getNode(node.label, this.barHeight, this.fontSize, this.font))
+        g.setNode(node.id, getNode(node.label, this.fontSize, this.font))
       })
     },
     defineEdges (edges: TreeEdgesArray, g: TreeGraph): void {
@@ -85,7 +85,7 @@ export default Vue.extend({
         g.setEdge(edge.from, edge.to, { label: edge.label })
       })
     },
-    getZoom (svg) {
+    getZoom (svg: D3SVGSelection) {
       return zoom()
         .scaleExtent([0.2, 8])
         .on('zoom', (event) => {
@@ -112,7 +112,7 @@ export default Vue.extend({
       this.defineNodes(nodes, g)
       this.defineEdges(edges, g)
       layout(g)
-      this.setSvg(g)
+      this.setSvg()
       drawNodes(this.svg, g, this.fontSize, this.nodeColour, this.nodeTextColour)
       drawEdges(this.svg, g, this.barHeight, this.font)
       const graphZoom = this.getZoom(this.svg)
