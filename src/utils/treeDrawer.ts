@@ -4,6 +4,10 @@ import { line } from 'd3-shape'
 
 const fontSizeToBarHeightRatio = 3
 
+const getLineThickness = (fontSize: number): number => {
+  return fontSize / 10
+}
+
 const getTextWidth = (innerText: string, fontSize: number, font: string) => {
   const text = document.createElement('span')
   document.body.appendChild(text)
@@ -45,10 +49,10 @@ const getMiddleEdgeIndex = (edges: { x: number, y: number }[]) => {
   return Math.floor(edges.length / 2)
 }
 
-const drawLine = (svg: D3SVGSelection, x1: number, y1: number, x2: number, y2: number) => {
+const drawLine = (svg: D3SVGSelection, x1: number, y1: number, x2: number, y2: number, strokeWidth: number) => {
   return svg.append('line')
     .style('stroke', 'black')
-    .style('stroke-width', 1)
+    .style('stroke-width', strokeWidth)
     .attr('x1', x1)
     .attr('y1', y1)
     .attr('x2', x2)
@@ -111,7 +115,7 @@ const getEdgeLabelXPos = (x: number, offset: number, textWidth: number) => {
 }
 
 const getEdgeLabelYPos = (y: number, index: number, fontSize: number) => {
-  return y + index * fontSize
+  return y + index * fontSize + fontSize
 }
 
 export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, font: string): void => {
@@ -125,7 +129,8 @@ export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, 
         const y1 = value.y + barHeight / 2
         const x2 = points[nextNodeIndex].x + xOffset
         const y2 = points[nextNodeIndex].y + barHeight / 2
-        const drawnLine = drawLine(svg, x1, y1, x2, y2)
+        const lineThickness = getLineThickness(getFontSizeFromBarHeight(barHeight))
+        const drawnLine = drawLine(svg, x1, y1, x2, y2, lineThickness)
         // if line == last line (node is 0  based, length is 1 based), add arrowhead
         if (nextNodeIndex === points.length - 1) {
           defineArrowHead(svg)
