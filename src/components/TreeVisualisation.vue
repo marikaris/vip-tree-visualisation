@@ -26,6 +26,12 @@ export default Vue.extend({
     },
     nodeTextColour: {
       default: '#000'
+    },
+    canvasWidth: {
+      default: document.body.clientWidth - 350
+    },
+    canvasHeight: {
+      default: window.screen.height - 200
     }
   },
   mounted (): void {
@@ -94,8 +100,8 @@ export default Vue.extend({
     setSvg (): void {
       this.svg = select(this.$el)
         .append('svg')
-        .attr('width', document.body.clientWidth - 350)
-        .attr('height', window.screen.height - 200)
+        .attr('width', this.canvasWidth)
+        .attr('height', this.canvasHeight)
     },
     render (nodes: TreeNodes, edges: TreeEdgesArray): void {
       const g: TreeGraph = new graphlib.Graph()
