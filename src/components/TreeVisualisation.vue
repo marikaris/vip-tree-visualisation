@@ -20,7 +20,13 @@ import { getNode, drawNodes, drawEdges, getBarHeightFromFontSize } from '@/utils
 export default Vue.extend({
   name: 'TreeVisualisation',
   props: {
-    tree: String
+    tree: String,
+    nodeColour: {
+      default: '#b0c4de'
+    },
+    nodeTextColour: {
+      default: '#000'
+    }
   },
   mounted (): void {
     this.render(this.nodes, this.edges)
@@ -101,7 +107,7 @@ export default Vue.extend({
       this.defineEdges(edges, g)
       layout(g)
       this.setSvg(g)
-      drawNodes(this.svg, g, this.fontSize)
+      drawNodes(this.svg, g, this.fontSize, this.nodeColour, this.nodeTextColour)
       drawEdges(this.svg, g, this.barHeight, this.font)
       const graphZoom = this.getZoom(this.svg)
       this.svg.call(graphZoom)

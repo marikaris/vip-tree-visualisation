@@ -59,7 +59,7 @@ const drawLine = (svg: D3SVGSelection, x1: number, y1: number, x2: number, y2: n
     .attr('y2', y2)
 }
 
-const drawNode = (gElement: D3SVGSelection, x: number, y: number, width: number, height: number) => {
+const drawNode = (gElement: D3SVGSelection, x: number, y: number, width: number, height: number, backgroundColour: string) => {
   gElement.append('rect')
     .attr('x', x)
     .attr('y', y)
@@ -68,25 +68,26 @@ const drawNode = (gElement: D3SVGSelection, x: number, y: number, width: number,
     .attr('stroke', 'black')
     .attr('rx', 3)
     .attr('ry', 3)
-    .attr('fill', '#69a3b2')
+    .attr('fill', backgroundColour)
 }
 
-const addLabel = (gElement: D3SVGSelection, x: number, y: number, label: string, fontSize: number) => {
+const addLabel = (gElement: D3SVGSelection, x: number, y: number, label: string, fontSize: number, textColour: string) => {
   gElement.append('text')
     .attr('x', x)
     .attr('y', y)
+    .attr('fill', textColour)
     .style('font-size', `${fontSize}px`)
     .style('text-anchor', 'middle')
     .text(label)
 }
 
-export const drawNodes = (svg: D3SVGSelection, g: TreeGraph, fontSize: number): void => {
+export const drawNodes = (svg: D3SVGSelection, g: TreeGraph, fontSize: number, backgroundColour: string, textColour: string): void => {
   const xOffset = getXOffset(svg)
   g.nodes().forEach((v: string) => {
     const node = g.node(v)
     const gElement = svg.append('g')
-    drawNode(gElement, node.x + xOffset - node.width / 2, node.y, node.width, node.height)
-    addLabel(gElement, node.x + xOffset, node.y + fontSize * 2, node.label, fontSize)
+    drawNode(gElement, node.x + xOffset - node.width / 2, node.y, node.width, node.height, backgroundColour)
+    addLabel(gElement, node.x + xOffset, node.y + fontSize * 2, node.label, fontSize, textColour)
   })
 }
 
@@ -143,7 +144,7 @@ export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, 
           for (const [labelIndex, label] of labels.entries()) {
             const xPos = getEdgeLabelXPos(value.x, xOffset, getTextWidth(label, fontSize, font))
             const yPos = getEdgeLabelYPos(value.y, labelIndex, fontSize)
-            addLabel(svg, xPos, yPos, label, fontSize)
+            addLabel(svg, xPos, yPos, label, fontSize, '#000')
           }
         }
       }
