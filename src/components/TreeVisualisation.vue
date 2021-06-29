@@ -6,11 +6,10 @@
 import Vue from 'vue'
 
 import { select } from 'd3-selection'
-// import { zoom, zoomIdentity } from 'd3-zoom'
+import { zoom } from 'd3-zoom'
 import graphlib from 'dagre/lib/graphlib'
 import * as layout from 'dagre/lib/layout'
 import { retrieveNodes, retrieveEdges } from '@/utils/treeBuilder'
-// import { calculateWidthScale, calculateHeightScale } from '@/utils/scaleCalculator'
 import { TreeNodes } from '@/types/TreeNodes'
 import { DecisionTree } from '@/types/DecisionTree'
 import { TreeEdgesArray } from '@/types/TreeEdges'
@@ -34,10 +33,9 @@ export default Vue.extend({
   mounted (): void {
     this.render(this.nodes, this.edges)
   },
-  data (): { svg: D3SVGSelection, initialScale: number } {
+  data (): { svg: D3SVGSelection } {
     return {
-      svg: {},
-      initialScale: 0.65
+      svg: {}
     }
   },
   computed: {
@@ -73,47 +71,39 @@ export default Vue.extend({
         g.setEdge(edge.from, edge.to, { label: edge.label })
       })
     },
-    addZoom (g: TreeGraph): void {
-      // const inner = this.svg.append('g')
-      // const d3zoom = zoom().on('zoom', () => {
-      //   inner.attr('transform', event.transform)
-      // })
-      // this.svg.call(d3zoom)
-      // const renderTree = new render()
-      // renderTree(inner, g)
-      // const width = parseInt(this.svg.attr('width'))
-      // const graphWidth = g.graph().width
-      // if (graphWidth) {
-      //   this.svg.call(
-      //     d3zoom.transform,
-      //     zoomIdentity
-      //       .translate(
-      //         calculateWidthScale(width, graphWidth, this.initialScale), 20)
-      //       .scale(this.initialScale)
-      //   )
-      // }
-      // const graphHeight = g.graph().height
-      // if (graphHeight) {
-      //   this.svg.attr('height', calculateHeightScale(graphHeight, this.initialScale))
-      // }
+    getZoom (svg) {
+      const d3zoom = zoom()
+        .scaleExtent([0.2, 8])
+        .on('zoom', (event) => {
+          svg.selectAll('line')
+            .attr('transform', event.transform)
+          svg.selectAll('rect')
+            .attr('transform', event.transform)
+          svg.selectAll('text')
+            .attr('transform', event.transform)
+        })
+      return d3zoom
     },
-    setSvg (g: TreeGraph): void {
+    setSvg (): void {
       this.svg = select(this.$el)
         .append('svg')
         .attr('width', document.body.clientWidth - 350)
-        .attr('height', 1700)
-      // this.addZoom(g)
+        .attr('height', window.screen.height - 200)
     },
     render (nodes: TreeNodes, edges: TreeEdgesArray): void {
       const g: TreeGraph = new graphlib.Graph()
       g.setGraph({})
-      g.setDefaultEdgeLabel(function () { return {} })
+      g.setDefaultEdgeLabel(() => {
+        return {}
+      })
       this.defineNodes(nodes, g)
       this.defineEdges(edges, g)
       layout(g)
       this.setSvg(g)
       drawNodes(this.svg, g, this.fontSize)
       drawEdges(this.svg, g, this.barHeight, this.font)
+      const graphZoom = this.getZoom(this.svg)
+      this.svg.call(graphZoom)
     },
     refresh (): void {
       this.svg.remove()
