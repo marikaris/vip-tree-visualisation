@@ -115,28 +115,6 @@ export default Vue.extend({
 </script>
 
 <style>
-h1,
-svg {
-  text-align: center;
-}
-
-svg {
-  display: block;
-  margin: auto;
-  border: 1px solid #ccc;
-}
-
-.node rect {
-  stroke: #333;
-  fill: #fff;
-}
-
-.edgePath path {
-  stroke: #333;
-  fill: #333;
-  stroke-width: 1.5px;
-}
-
 .d3-tree-visualisation {
   font-size: 10px;
 }
