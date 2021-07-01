@@ -8,7 +8,7 @@ const getLineThickness = (fontSize: number): number => {
   return fontSize / 10
 }
 
-const getTextWidth = (innerText: string, fontSize: number, font: string) => {
+const getTextWidth = (innerText: string, fontSize: number, font: string): number => {
   const text = document.createElement('span')
   document.body.appendChild(text)
   text.style.font = font
@@ -46,7 +46,7 @@ const getXOffset = (svg: D3SVGSelection) => {
   return Number(svg.style('width').replace('px', '')) / 3
 }
 
-const getMiddleEdgeIndex = (edges: { x: number, y: number }[]) => {
+const getMiddleEdgeIndex = (edges: { x: number, y: number }[]): number => {
   return Math.floor(edges.length / 2)
 }
 
@@ -112,11 +112,11 @@ const defineArrowHead = (svg: D3SVGSelection) => {
     .attr('stroke', 'black')
 }
 
-const getEdgeLabelXPos = (x: number, offset: number, textWidth: number) => {
+const getEdgeLabelXPos = (x: number, offset: number, textWidth: number): number => {
   return x + offset + textWidth / 2 + 2
 }
 
-const getEdgeLabelYPos = (y: number, index: number, fontSize: number) => {
+const getEdgeLabelYPos = (y: number, index: number, fontSize: number): number => {
   return y + index * fontSize + fontSize
 }
 
