@@ -1,11 +1,61 @@
 import { D3SVGSelection } from '@/types/d3'
 import { TreeGraph } from '@/types/dagre'
 import { line } from 'd3-shape'
+import { zoom, ZoomBehavior, ZoomedElementBaseType } from 'd3-zoom'
 
+/**
+ * Functions that calculate reference sizes
+ */
 const fontSizeToBarHeightRatio = 3
 
 const getLineThickness = (fontSize: number): number => {
   return fontSize / 10
+}
+
+export const getBarHeightFromFontSize = (fontSize: number): number => {
+  return fontSizeToBarHeightRatio * fontSize
+}
+
+const getFontSizeFromBarHeight = (barHeight: number): number => {
+  return barHeight / fontSizeToBarHeightRatio
+}
+
+const getMiddleEdgeIndex = (edges: { x: number, y: number }[]): number => {
+  return Math.floor(edges.length / 2)
+}
+
+/**
+ * Functions that calculate y positions
+ */
+const getEdgeLabelYPos = (y: number, index: number, fontSize: number): number => {
+  return y + index * fontSize + fontSize
+}
+
+const getNodeLabelYPos = (y: number, fontSize: number): number => {
+  return y + fontSize * 2
+}
+
+/**
+ * Functions that calculate x positions
+ */
+const getXPos = (x: number, xOffset: number): number => {
+  return x + xOffset
+}
+
+const getEdgeLabelXPos = (xPos: number, textWidth: number): number => {
+  return xPos + textWidth / 2 + 2
+}
+
+const getNodeXPos = (xPos: number, width: number): number => {
+  return xPos - width / 2
+}
+
+/**
+ * Functions retrieve the sizes of elements on the screen
+ */
+const getXOffset = (svg: D3SVGSelection) => {
+  // Get the third of the canvas to center the graph
+  return Number(svg.style('width').replace('px', '')) / 3.5
 }
 
 const getTextWidth = (innerText: string, fontSize: number, font: string): number => {
@@ -23,14 +73,9 @@ const getTextWidth = (innerText: string, fontSize: number, font: string): number
   return width
 }
 
-export const getBarHeightFromFontSize = (fontSize: number): number => {
-  return fontSizeToBarHeightRatio * fontSize
-}
-
-const getFontSizeFromBarHeight = (barHeight: number): number => {
-  return barHeight / fontSizeToBarHeightRatio
-}
-
+/**
+ * Functions define data to prepare for drawing
+ */
 export const getNode = (label: string, fontSize: number, font: string): { label: string, width: number, height: number } => {
   const textWidth = exportFunctions.getTextWidth(label, fontSize, font)
   const barHeight = getBarHeightFromFontSize(fontSize)
@@ -41,15 +86,9 @@ export const getNode = (label: string, fontSize: number, font: string): { label:
   }
 }
 
-const getXOffset = (svg: D3SVGSelection) => {
-  // Get the third of the canvas to center the graph
-  return Number(svg.style('width').replace('px', '')) / 3
-}
-
-const getMiddleEdgeIndex = (edges: { x: number, y: number }[]): number => {
-  return Math.floor(edges.length / 2)
-}
-
+/**
+ * Functions that define elements (that help) to draw on the screen
+ */
 const drawLine = (svg: D3SVGSelection, x1: number, y1: number, x2: number, y2: number, strokeWidth: number) => {
   return svg.append('line')
     .style('stroke', 'black')
@@ -82,28 +121,14 @@ const addLabel = (gElement: D3SVGSelection, x: number, y: number, label: string,
     .text(label)
 }
 
-export const drawNodes = (svg: D3SVGSelection, g: TreeGraph, fontSize: number, backgroundColour: string, textColour: string): void => {
-  const xOffset = getXOffset(svg)
-  g.nodes().forEach((v: string) => {
-    const node = g.node(v)
-    const gElement = svg.append('g')
-    drawNode(gElement, node.x + xOffset - node.width / 2, node.y, node.width, node.height, backgroundColour)
-    addLabel(gElement, node.x + xOffset, node.y + fontSize * 2, node.label, fontSize, textColour)
-  })
-}
-
 const defineArrowHead = (svg: D3SVGSelection) => {
-  const markerBoxWidth = 10
-  const markerBoxHeight = 10
-  const refX = 9
-  const refY = 5
   const arrowPoints: Iterable<[number, number]> = [[0, 0], [0, 10], [10, 5]]
   svg.append('defs')
     .append('marker')
     .attr('id', 'arrow')
-    .attr('viewBox', [0, 0, markerBoxWidth, markerBoxHeight])
-    .attr('refX', refX)
-    .attr('refY', refY)
+    .attr('viewBox', [0, 0, 10, 10])
+    .attr('refX', 9)
+    .attr('refY', 5)
     .attr('markerWidth', 8)
     .attr('markerHeight', 6)
     .attr('orient', 'auto')
@@ -112,12 +137,37 @@ const defineArrowHead = (svg: D3SVGSelection) => {
     .attr('stroke', 'black')
 }
 
-const getEdgeLabelXPos = (x: number, offset: number, textWidth: number): number => {
-  return x + offset + textWidth / 2 + 2
+export const defineCanvas = (element: D3SVGSelection, canvasWidth: number, canvasHeight: number): D3SVGSelection => {
+  return element.append('svg')
+    .attr('width', canvasWidth)
+    .attr('height', canvasHeight)
 }
 
-const getEdgeLabelYPos = (y: number, index: number, fontSize: number): number => {
-  return y + index * fontSize + fontSize
+export const defineZoom = (svg: D3SVGSelection, min: number, max: number): ZoomBehavior<ZoomedElementBaseType, unknown> => {
+  return zoom()
+    .scaleExtent([min, max])
+    .on('zoom', (event) => {
+      svg.selectAll('line')
+        .attr('transform', event.transform)
+      svg.selectAll('rect')
+        .attr('transform', event.transform)
+      svg.selectAll('text')
+        .attr('transform', event.transform)
+    })
+}
+
+/**
+ * Functions that go through the nodes and edges to draw them on the screen
+ */
+export const drawNodes = (svg: D3SVGSelection, g: TreeGraph, fontSize: number, backgroundColour: string, textColour: string): void => {
+  const xOffset = getXOffset(svg)
+  g.nodes().forEach((v: string) => {
+    const node = g.node(v)
+    const gElement = svg.append('g')
+    const xPos = getXPos(node.x, xOffset)
+    drawNode(gElement, getNodeXPos(xPos, node.width), node.y, node.width, node.height, backgroundColour)
+    addLabel(gElement, xPos, getNodeLabelYPos(node.y, fontSize), node.label, fontSize, textColour)
+  })
 }
 
 export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, font: string): void => {
@@ -127,9 +177,9 @@ export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, 
     for (const [nodeIndex, value] of points.entries()) {
       const nextNodeIndex = nodeIndex + 1
       if (nextNodeIndex !== points.length) {
-        const x1 = value.x + xOffset
+        const x1 = getXPos(value.x, xOffset)
         const y1 = value.y + barHeight / 2
-        const x2 = points[nextNodeIndex].x + xOffset
+        const x2 = getXPos(points[nextNodeIndex].x, xOffset)
         const y2 = points[nextNodeIndex].y + barHeight / 2
         const lineThickness = getLineThickness(getFontSizeFromBarHeight(barHeight))
         const drawnLine = drawLine(svg, x1, y1, x2, y2, lineThickness)
@@ -143,7 +193,7 @@ export const drawEdges = (svg: D3SVGSelection, g: TreeGraph, barHeight: number, 
           const fontSize = getFontSizeFromBarHeight(barHeight)
           const labels = g.edge(e).label.split('\n')
           for (const [labelIndex, label] of labels.entries()) {
-            const xPos = getEdgeLabelXPos(value.x, xOffset, getTextWidth(label, fontSize, font))
+            const xPos = getEdgeLabelXPos(getXPos(value.x, xOffset), getTextWidth(label, fontSize, font))
             const yPos = getEdgeLabelYPos(value.y, labelIndex, fontSize)
             addLabel(svg, xPos, yPos, label, fontSize, '#000')
           }
@@ -158,12 +208,13 @@ const exportFunctions = {
   getBarHeightFromFontSize,
   getFontSizeFromBarHeight,
   getNode,
-  drawNodes,
-  drawEdges,
   getTextWidth,
   getMiddleEdgeIndex,
   getEdgeLabelXPos,
-  getEdgeLabelYPos
+  getEdgeLabelYPos,
+  getNodeXPos,
+  getNodeLabelYPos,
+  getXPos
 }
 
 export default exportFunctions

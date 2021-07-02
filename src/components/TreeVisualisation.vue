@@ -6,7 +6,6 @@
 import Vue from 'vue'
 
 import { select } from 'd3-selection'
-import { zoom } from 'd3-zoom'
 import graphlib from 'dagre/lib/graphlib'
 import * as layout from 'dagre/lib/layout'
 import { retrieveNodes, retrieveEdges } from '@/utils/treeBuilder'
@@ -15,7 +14,7 @@ import { DecisionTree } from '@/types/DecisionTree'
 import { TreeEdgesArray } from '@/types/TreeEdges'
 import { TreeGraph } from '@/types/dagre'
 import { D3SVGSelection } from '@/types/d3'
-import { getNode, drawNodes, drawEdges, getBarHeightFromFontSize } from '@/utils/treeDrawer'
+import { getNode, drawNodes, drawEdges, getBarHeightFromFontSize, defineCanvas, defineZoom } from '@/utils/treeDrawer'
 
 export default Vue.extend({
   name: 'TreeVisualisation',
@@ -28,7 +27,7 @@ export default Vue.extend({
       default: '#000'
     },
     canvasWidth: {
-      default: document.body.clientWidth - 350
+      default: window.screen.width - 350
     },
     canvasHeight: {
       default: window.screen.height - 200
@@ -44,10 +43,12 @@ export default Vue.extend({
   },
   computed: {
     fontSize (): number {
-      return Number(this.getCss('font-size').replace('px', ''))
+      const fontSize = this.getCss('font-size')
+      return fontSize ? Number(fontSize.replace('px', '')) : 10
     },
     font (): string {
-      return this.getCss('font')
+      const font = this.getCss('font')
+      return font || 'Avenir, Helvetica, Arial, sans-serif'
     },
     barHeight (): number {
       return getBarHeightFromFontSize(this.fontSize)
@@ -72,8 +73,10 @@ export default Vue.extend({
   },
   methods: {
     getCss (property: string) {
-      const element = document.getElementsByClassName('d3-tree-visualisation')[0]
-      return window.getComputedStyle(element, null).getPropertyValue(property)
+      const element = select(this.$el).node()
+      if (element) {
+        return window.getComputedStyle(element).getPropertyValue(property)
+      }
     },
     defineNodes (nodes: TreeNodes, g: TreeGraph): void {
       nodes.forEach((node) => {
@@ -85,25 +88,10 @@ export default Vue.extend({
         g.setEdge(edge.from, edge.to, { label: edge.label })
       })
     },
-    getZoom (svg: D3SVGSelection) {
-      return zoom()
-        .scaleExtent([0.2, 8])
-        .on('zoom', (event) => {
-          svg.selectAll('line')
-            .attr('transform', event.transform)
-          svg.selectAll('rect')
-            .attr('transform', event.transform)
-          svg.selectAll('text')
-            .attr('transform', event.transform)
-        })
-    },
     setSvg (): void {
-      this.svg = select(this.$el)
-        .append('svg')
-        .attr('width', this.canvasWidth)
-        .attr('height', this.canvasHeight)
+      this.svg = defineCanvas(select(this.$el), this.canvasWidth, this.canvasHeight)
     },
-    render (nodes: TreeNodes, edges: TreeEdgesArray): void {
+    generateGraph (nodes: TreeNodes, edges: TreeEdgesArray) {
       const g: TreeGraph = new graphlib.Graph()
       g.setGraph({})
       g.setDefaultEdgeLabel(() => {
@@ -112,11 +100,18 @@ export default Vue.extend({
       this.defineNodes(nodes, g)
       this.defineEdges(edges, g)
       layout(g)
+      return g
+    },
+    drawGraph (g: TreeGraph) {
       this.setSvg()
       drawNodes(this.svg, g, this.fontSize, this.nodeColour, this.nodeTextColour)
       drawEdges(this.svg, g, this.barHeight, this.font)
-      const graphZoom = this.getZoom(this.svg)
+      const graphZoom = defineZoom(this.svg, 0.2, 8)
       this.svg.call(graphZoom)
+    },
+    render (nodes: TreeNodes, edges: TreeEdgesArray): void {
+      const g: TreeGraph = this.generateGraph(nodes, edges)
+      this.drawGraph(g)
     },
     refresh (): void {
       this.svg.remove()

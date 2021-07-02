@@ -1,1 +1,1 @@
-declare module 'dagre/lib/graphlib'
+declare module 'dagre/lib/graphlib';

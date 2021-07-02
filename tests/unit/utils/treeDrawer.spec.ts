@@ -39,11 +39,23 @@ describe('retrieveTreeFromFile', () => {
     expect(actual).toEqual(1)
   })
   it('getEdgeLabelXPos', () => {
-    const actual = treeDrawer.getEdgeLabelXPos(42, 42, 42)
+    const actual = treeDrawer.getEdgeLabelXPos(84, 42)
     expect(actual).toEqual(107)
   })
   it('getEdgeLabelYPos', () => {
     const actual = treeDrawer.getEdgeLabelYPos(42, 1, 10)
     expect(actual).toEqual(62)
+  })
+  it('getNodeXPos', () => {
+    const actual = treeDrawer.getNodeXPos(84, 42)
+    expect(actual).toEqual(63)
+  })
+  it('getNodeLabelYPos', () => {
+    const actual = treeDrawer.getNodeLabelYPos(42, 10)
+    expect(actual).toEqual(62)
+  })
+  it('getXPos', () => {
+    const actual = treeDrawer.getXPos(42, 42)
+    expect(actual).toEqual(84)
   })
 })
